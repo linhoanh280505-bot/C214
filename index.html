@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>織心手作 | 溫暖手作毛線藝品</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: {
+              50: '#FDFBF7',
+              100: '#F7F3E9',
+              200: '#EFE7D5',
+            },
+            terracotta: {
+              100: '#FCEBE6',
+              500: '#D97757',
+              600: '#C25E3E',
+              700: '#A44528',
+            },
+            sage: {
+              100: '#EBF0EC',
+              500: '#829B88',
+              600: '#69816F',
+            },
+            wood: {
+              600: '#8C6D58',
+              800: '#5C4433',
+            }
+          },
+          fontFamily: {
+            serif: ['"Noto Serif TC"', 'serif'],
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #FDFBF7;
+      color: #4A3E3D;
+    }
+    
+    /* 動態 Logo 針織線條動畫 */
+    @keyframes yarnPulse {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.05) rotate(5deg); }
+    }
+    @keyframes knitDash {
+      to { stroke-dashoffset: 0; }
+    }
+    .animated-yarn {
+      animation: yarnPulse 4s ease-in-out infinite;
+    }
+    .animated-thread {
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      animation: knitDash 3s ease-in-out forwards infinite alternate;
+    }
+
+    /* 全局 Loading 遮罩 */
+    #loading-overlay {
+      transition: opacity 0.25s ease-in-out;
+    }
+    
+    /* 隱藏滾動條但保持滾動 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-cream-50 text-stone-800">
+
+  <!-- 全域 Loading 畫面 -->
+  <div id="loading-overlay" class="fixed inset-0 bg-cream-50/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+    <div class="relative w-20 h-20">
+      <div class="w-16 h-16 rounded-full border-4 border-terracotta-100 border-t-terracotta-500 animate-spin"></div>
+      <i data-lucide="scissors" class="w-6 h-6 text-terracotta-500 absolute inset-0 m-auto"></i>
+    </div>
+    <p class="mt-4 text-terracotta-600 font-medium tracking-wide">毛線穿針引線中...</p>
+  </div>
+
+  <!-- 上方導覽列 Header -->
+  <header class="sticky top-0 z-40 bg-cream-50/90 backdrop-blur-md border-b border-cream-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        
+        <!-- 動態 Logo -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('shop')">
+          <div class="animated-yarn relative w-12 h-12 flex items-center justify-center bg-terracotta-100 rounded-full p-2 border border-terracotta-500/20">
+            <svg class="w-full h-full text-terracotta-500" viewBox="0 0 100 100" fill="none" stroke="currentColor">
+              <!-- 毛線球繪製 -->
+              <circle cx="50" cy="50" r="40" stroke-width="6" class="text-terracotta-500/30" />
+              <path d="M 20 40 C 40 20, 60 80, 80 60" stroke-width="6" stroke-linecap="round" class="animated-thread" />
+              <path d="M 30 70 C 50 30, 70 70, 80 30" stroke-width="5" stroke-linecap="round" class="animated-thread" style="animation-delay: 0.5s;" />
+              <path d="M 15 50 C 35 90, 80 40, 85 50" stroke-width="4" stroke-linecap="round" class="animated-thread" style="animation-delay: 1s;" />
+            </svg>
+            <i data-lucide="heart" class="w-4 h-4 text-terracotta-600 absolute inset-0 m-auto fill-terracotta-500"></i>
+          </div>
+          <div>
+            <span class="font-serif text-2xl font-bold tracking-wider text-terracotta-700 block">織心手作</span>
+            <span class="text-xs text-wood-600 tracking-widest block -mt-1">HANDMADE YARN CRAFTS</span>
+          </div>
+        </div>
+
+        <!-- 導覽選單 (Desktop) -->
+        <nav class="hidden md:flex items-center space-x-1 sm:space-x-4">
+          <button onclick="switchTab('shop')" id="nav-shop" class="nav-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 text-terracotta-600 bg-terracotta-100/60 shadow-sm flex items-center gap-1.5">
+            <i data-lucide="store" class="w-4 h-4"></i>商品商城
+          </button>
+          <button onclick="switchTab('member')" id="nav-member" class="nav-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 text-stone-600 hover:text-terracotta-600 hover:bg-cream-100 flex items-center gap-1.5">
+            <i data-lucide="user" class="w-4 h-4"></i>會員中心 / 查詢
+          </button>
+          <button onclick="switchTab('register')" id="nav-register" class="nav-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 text-stone-600 hover:text-terracotta-600 hover:bg-cream-100 flex items-center gap-1.5">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>註冊帳號
+          </button>
+        </nav>
+
+        <!-- 購物車按鈕 -->
+        <div class="flex items-center space-x-3">
+          <button onclick="toggleCartDrawer()" class="relative p-2.5 bg-terracotta-500 text-white rounded-full hover:bg-terracotta-600 transition-colors shadow-md hover:shadow-lg flex items-center justify-center">
+            <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+            <span id="cart-badge" class="absolute -top-1 -right-1 bg-amber-400 text-stone-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-cream-50 hidden">0</span>
+          </button>
+
+          <!-- 行動裝置選單按鈕 -->
+          <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-stone-600 hover:text-terracotta-600">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 行動裝置下拉選單 -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-cream-200 bg-cream-50 px-4 pt-2 pb-4 space-y-2">
+      <button onclick="switchTab('shop'); toggleMobileMenu()" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-stone-700 hover:bg-cream-100 flex items-center gap-2">
+        <i data-lucide="store" class="w-4 h-4"></i>商品商城
+      </button>
+      <button onclick="switchTab('member'); toggleMobileMenu()" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-stone-700 hover:bg-cream-100 flex items-center gap-2">
+        <i data-lucide="user" class="w-4 h-4"></i>會員中心 / 查詢
+      </button>
+      <button onclick="switchTab('register'); toggleMobileMenu()" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-stone-700 hover:bg-cream-100 flex items-center gap-2">
+        <i data-lucide="user-plus" class="w-4 h-4"></i>註冊帳號
+      </button>
+    </div>
+  </header>
+
+  <!-- 主要內容區域 -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- 1. 商品商城頁面 (Shop View) -->
+    <section id="view-shop" class="space-y-8">
+      <!-- 英雄標語 Banner -->
+      <div class="relative rounded-3xl bg-gradient-to-r from-terracotta-100 via-cream-100 to-sage-100 p-8 md:p-12 overflow-hidden shadow-inner border border-cream-200">
+        <div class="max-w-xl z-10 relative space-y-4">
+          <span class="inline-block px-3 py-1 bg-terracotta-500 text-white text-xs font-semibold rounded-full tracking-wider uppercase">100% 手作針織</span>
+          <h1 class="font-serif text-3xl md:text-4xl font-bold text-stone-800 leading-tight">每一針每一線，<br>編織專屬於你的溫暖故事</h1>
+          <p class="text-stone-600 text-sm md:text-base">選用天然羊毛與有機棉線，由資深編織師手工精心鉤織，為日常生活添上一抹療癒質感。</p>
+        </div>
+        <div class="absolute right-0 bottom-0 opacity-10 md:opacity-20 pointer-events-none transform translate-x-10 translate-y-10">
+          <i data-lucide="sparkles" class="w-96 h-96 text-terracotta-500"></i>
+        </div>
+      </div>
+
+      <!-- 分類與搜尋過濾 -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-cream-200 pb-4">
+        <div class="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 no-scrollbar">
+          <button onclick="filterProducts('all')" class="cat-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-terracotta-500 text-white shadow-sm transition-all whitespace-nowrap">全部商品</button>
+          <button onclick="filterProducts('dolls')" class="cat-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-cream-100 text-stone-600 hover:bg-terracotta-100 transition-all whitespace-nowrap">療癒玩偶</button>
+          <button onclick="filterProducts('accessories')" class="cat-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-cream-100 text-stone-600 hover:bg-terracotta-100 transition-all whitespace-nowrap">穿搭飾品</button>
+          <button onclick="filterProducts('home')" class="cat-btn px-4 py-2 rounded-full text-xs sm:text-sm font-medium bg-cream-100 text-stone-600 hover:bg-terracotta-100 transition-all whitespace-nowrap">居家小物</button>
+        </div>
+        <div class="text-xs text-stone-500 font-medium">
+          顯示 <span id="product-count" class="text-terracotta-600 font-bold">6</span> 項手作品
+        </div>
+      </div>
+
+      <!-- 商品列表 Grid -->
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 動態渲染商品卡片 -->
+      </div>
+    </section>
+
+    <!-- 2. 會員註冊頁面 (Register View) -->
+    <section id="view-register" class="hidden max-w-2xl mx-auto space-y-6">
+      <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-cream-200">
+        <div class="text-center mb-8">
+          <div class="inline-flex p-3 bg-terracotta-100 rounded-full text-terracotta-600 mb-3">
+            <i data-lucide="user-plus" class="w-8 h-8"></i>
+          </div>
+          <h2 class="font-serif text-2xl font-bold text-stone-800">加入織心會員</h2>
+          <p class="text-sm text-stone-500 mt-1">註冊成為會員，享有手作課程優惠與訂單查詢功能</p>
+        </div>
+
+        <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">姓名 / 暱稱 <span class="text-red-500">*</span></label>
+              <input type="text" id="reg-name" required placeholder="請輸入姓名" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">密碼 <span class="text-red-500">*</span></label>
+              <input type="password" id="reg-pwd" required placeholder="請設定密碼" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">性別</label>
+              <select id="reg-sex" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm bg-white">
+                <option value="F">女性</option>
+                <option value="M">男性</option>
+                <option value="O">其他 / 不透露</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">部門 / 分組 (dep)</label>
+              <input type="text" id="reg-dep" placeholder="例：設計部 或 一般會員" value="VIP會員" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">市話 (tel)</label>
+              <input type="text" id="reg-tel" placeholder="02-23456789" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">行動電話 (mobile)</label>
+              <input type="text" id="reg-mobile" placeholder="0912345678" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">收件地址 (addr)</label>
+            <input type="text" id="reg-addr" placeholder="請輸入完整郵寄地址" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:ring-2 focus:ring-terracotta-500 focus:border-transparent outline-none transition text-sm">
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-terracotta-500 hover:bg-terracotta-600 text-white font-medium rounded-xl shadow-md transition duration-200 mt-6 flex items-center justify-center gap-2">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>確認送出註冊
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. 會員查詢與資料更新頁面 (Member / Search View) -->
+    <section id="view-member" class="hidden space-y-8">
+      <!-- 搜尋表單卡片 -->
+      <div class="bg-white rounded-3xl p-6 shadow-md border border-cream-200">
+        <h3 class="font-serif text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+          <i data-lucide="search" class="w-5 h-5 text-terracotta-500"></i> 會員資料查詢 (GET)
+        </h3>
+        <form id="search-form" onsubmit="handleSearch(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <input type="text" id="search-id" placeholder="會員 ID" class="px-3.5 py-2 rounded-xl border border-stone-200 text-sm outline-none focus:border-terracotta-500">
+          <input type="text" id="search-name" placeholder="姓名" class="px-3.5 py-2 rounded-xl border border-stone-200 text-sm outline-none focus:border-terracotta-500">
+          <input type="text" id="search-dep" placeholder="部門/類別" class="px-3.5 py-2 rounded-xl border border-stone-200 text-sm outline-none focus:border-terracotta-500">
+          <select id="search-sex" class="px-3.5 py-2 rounded-xl border border-stone-200 text-sm outline-none focus:border-terracotta-500 bg-white">
+            <option value="">性別 (全部)</option>
+            <option value="F">女</option>
+            <option value="M">男</option>
+          </select>
+          <button type="submit" class="bg-stone-800 hover:bg-stone-900 text-white rounded-xl py-2 px-4 text-sm font-medium transition flex items-center justify-center gap-1.5">
+            <i data-lucide="filter" class="w-4 h-4"></i>搜尋資料
+          </button>
+        </form>
+      </div>
+
+      <!-- 查詢結果列表 -->
+      <div class="bg-white rounded-3xl p-6 shadow-md border border-cream-200">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-serif text-lg font-bold text-stone-800">會員列表</h3>
+          <button onclick="fetchMembers()" class="text-xs text-terracotta-600 hover:underline flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>重新整理
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-stone-600">
+            <thead class="bg-cream-100 text-stone-700 font-medium rounded-lg">
+              <tr>
+                <th class="p-3 rounded-l-lg">ID</th>
+                <th class="p-3">姓名</th>
+                <th class="p-3">性別</th>
+                <th class="p-3">部門/類別</th>
+                <th class="p-3">電話/手機</th>
+                <th class="p-3">地址</th>
+                <th class="p-3">購物金/點數 (m)</th>
+                <th class="p-3 rounded-r-lg text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="member-table-body" class="divide-y divide-cream-100">
+              <!-- 數據列由 JS 填充 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 會員更新彈窗 Modal (PUT) -->
+  <div id="update-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative animate-fadeIn">
+      <button onclick="closeUpdateModal()" class="absolute top-5 right-5 text-stone-400 hover:text-stone-600">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <h3 class="font-serif text-xl font-bold text-stone-800 mb-1">更新會員資料 (PUT)</h3>
+      <p class="text-xs text-stone-500 mb-6">修改會員資料需要輸入當前密碼進行身分驗證</p>
+
+      <form id="update-form" onsubmit="handleUpdateMember(event)" class="space-y-4">
+        <input type="hidden" id="update-id">
+        
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">當前驗證密碼 <span class="text-red-500">*</span></label>
+          <input type="password" id="update-auth-pwd" required placeholder="請輸入原密碼核對" class="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+        </div>
+
+        <hr class="border-cream-200 my-2">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">新電話 (mobile)</label>
+            <input type="text" id="update-mobile" class="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 mb-1">變更密碼 (new_pwd)</label>
+            <input type="password" id="update-new-pwd" placeholder="若不改請留空" class="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">新收件地址 (addr)</label>
+          <input type="text" id="update-addr" class="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">點數/金額 (m)</label>
+          <input type="number" id="update-m" class="w-full px-3.5 py-2 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-terracotta-500 hover:bg-terracotta-600 text-white font-medium rounded-xl shadow transition mt-4">
+          確認更新資料
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 購物車抽屜 (Cart Drawer Slider) -->
+  <div id="cart-drawer-overlay" onclick="toggleCartDrawer()" class="fixed inset-0 bg-stone-900/30 backdrop-blur-xs z-50 hidden transition-opacity duration-300"></div>
+  
+  <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+    <!-- 購物車 Header -->
+    <div class="p-5 border-b border-cream-200 flex justify-between items-center bg-cream-50">
+      <div class="flex items-center gap-2">
+        <i data-lucide="shopping-bag" class="w-5 h-5 text-terracotta-500"></i>
+        <h3 class="font-serif text-lg font-bold text-stone-800">您的手作購物車</h3>
+      </div>
+      <button onclick="toggleCartDrawer()" class="p-1 rounded-full text-stone-400 hover:text-stone-600 hover:bg-cream-200">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- 購物車內容區 -->
+    <div id="cart-items-container" class="flex-grow overflow-y-auto p-5 space-y-4">
+      <!-- JS 動態渲染購物車項目 -->
+    </div>
+
+    <!-- 購物車 Summary & 結帳按鈕 -->
+    <div class="p-5 border-t border-cream-200 bg-cream-50/50 space-y-4">
+      <div class="space-y-1.5 text-sm">
+        <div class="flex justify-between text-stone-500">
+          <span>小計</span>
+          <span id="cart-subtotal">NT$ 0</span>
+        </div>
+        <div class="flex justify-between text-stone-500">
+          <span>運費</span>
+          <span class="text-sage-600 font-medium">免運費</span>
+        </div>
+        <hr class="border-cream-200 my-1">
+        <div class="flex justify-between text-base font-bold text-stone-800">
+          <span>總計 (點數/金額)</span>
+          <span id="cart-total" class="text-terracotta-600">NT$ 0</span>
+        </div>
+      </div>
+
+      <button onclick="openCheckoutModal()" class="w-full py-3 bg-terracotta-500 hover:bg-terracotta-600 text-white font-medium rounded-xl shadow-md transition flex items-center justify-center gap-2">
+        <i data-lucide="credit-card" class="w-4 h-4"></i>前往結帳扣款
+      </button>
+    </div>
+  </div>
+
+  <!-- 結帳認證 Modal -->
+  <div id="checkout-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+      <button onclick="closeCheckoutModal()" class="absolute top-5 right-5 text-stone-400 hover:text-stone-600">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <h3 class="font-serif text-xl font-bold text-stone-800 mb-1">訂單結帳與會員驗證</h3>
+      <p class="text-xs text-stone-500 mb-6">請選擇您的會員身分並輸入密碼以扣抵金額與完成配送</p>
+
+      <form id="checkout-form" onsubmit="handleCheckout(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">選擇訂購會員 <span class="text-red-500">*</span></label>
+          <select id="checkout-user-select" required onchange="onCheckoutUserChange()" class="w-full px-3.5 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none bg-white">
+            <!-- 動態載入會員選項 -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">會員驗證密碼 <span class="text-red-500">*</span></label>
+          <input type="password" id="checkout-pwd" required placeholder="請輸入密碼進行驗證 (PUT)" class="w-full px-3.5 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 mb-1">確認配送地址 (可更新)</label>
+          <input type="text" id="checkout-addr" required class="w-full px-3.5 py-2.5 border border-stone-200 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none">
+        </div>
+
+        <div class="bg-cream-100 p-3.5 rounded-xl text-xs space-y-1 text-stone-600">
+          <div class="flex justify-between">
+            <span>目前會員餘額 (m)：</span>
+            <span id="checkout-user-m" class="font-bold text-stone-800">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span>本次應付金額：</span>
+            <span id="checkout-order-total" class="font-bold text-terracotta-600">0</span>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-terracotta-500 hover:bg-terracotta-600 text-white font-medium rounded-xl shadow-md transition mt-2 flex items-center justify-center gap-2">
+          <i data-lucide="check" class="w-4 h-4"></i>確認扣款並提交訂單
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 頁尾 Footer -->
+  <footer class="bg-cream-100 border-t border-cream-200 mt-16 py-8 text-center text-xs text-stone-500">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <p class="font-serif font-bold text-stone-700 text-sm">織心手作 Weaver's Heart Handmade Crafts</p>
+      <p>溫暖手作 • 鉤針毛線 • 客製化禮物</p>
+      <p class="pt-2 text-stone-400">© 2026 織心手作 All Rights Reserved.</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript 核心邏輯 -->
+  <script>
+    /* ==========================================
+       後端 API 規格設定 (Base URL)
+    ========================================== */
+    const API_BASE_URL = 'http://localhost/api.php';
+
+    /* 假資料 Mock 數據庫 (當 API 無法連線時作為 Fallback 備援) */
+    let mockMembersDb = [
+      { id: 1, name: '織心小幫手', sex: 'F', dep: 'VIP會員', tel: '02-23456789', mobile: '0912345678', addr: '台北市信義區忠孝東路五段1號', m: 5000, pwd: '123' },
+      { id: 2, name: '毛線愛好者', sex: 'M', dep: '一般會員', tel: '04-22233344', mobile: '0987654321', addr: '台中市西區台灣大道二段99號', m: 1200, pwd: '123' }
+    ];
+    let isMockMode = false;
+
+    /* ==========================================
+       模擬/預設商品資料 (Product Catalog)
+    ========================================== */
+   /* ==========================================
+   商品資料：織心手作毛線手工藝品
+========================================== */
+
+const PRODUCTS = [
+  {
+    id: 'p1',
+    name: '織心毛線小熊',
+    category: 'dolls',
+    price: 450,
+    image: 'images/01.jpeg',
+    description: '採用高質感牛奶棉手鉤，手感柔韌，送禮最療癒的陪伴夥伴。'
+  },
+  {
+    id: 'p2',
+    name: '溫柔編織圍巾',
+    category: 'accessories',
+    price: 880,
+    image: 'images/02.jpeg',
+    description: '柔軟舒適的手工編織圍巾，適合日常穿搭。'
+  },
+  {
+    id: 'p3',
+    name: '手作毛線花束',
+    category: 'home',
+    price: 360,
+    image: 'images/03.jpeg',
+    description: '永不凋謝的手作毛線花束，適合送禮與居家裝飾。'
+  },
+  {
+    id: 'p4',
+    name: '毛線手提袋',
+    category: 'accessories',
+    price: 620,
+    image: 'images/04.jpeg',
+    description: '精緻手工編織手提袋，兼具美觀與實用性。'
+  },
+  {
+    id: 'p5',
+    name: '手工針織帽',
+    category: 'accessories',
+    price: 520,
+    image: 'images/05.jpeg',
+    description: '溫暖舒適的手工針織帽，適合日常搭配。'
+  },
+  {
+    id: 'p6',
+    name: '毛線隔熱杯墊',
+    category: 'home',
+    price: 250,
+    image: 'images/06.jpeg',
+    description: '可愛的手工毛線杯墊，為生活增添溫馨感。'
+  }
+];
+
+    /* 全局狀態 State */
+    let cart = [];
+    let memberList = [];
+
+    /* ==========================================
+       頁面初始化與事件綁定
+    ========================================== */
+    window.onload = function() {
+      lucide.createIcons();
+      renderProducts(PRODUCTS);
+      fetchMembers(); // 初始化加載會員清單
+    };
+
+    /* 全域 Loading 控制器 */
+    function showLoading(show) {
+      const overlay = document.getElementById('loading-overlay');
+      if (show) {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+      } else {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      }
+    }
+
+    /* 切換頁面 Tab */
+    function switchTab(tabName) {
+      // 隱藏所有頁面
+      document.getElementById('view-shop').classList.add('hidden');
+      document.getElementById('view-register').classList.add('hidden');
+      document.getElementById('view-member').classList.add('hidden');
+
+      // 清除按鈕高亮
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-terracotta-600', 'bg-terracotta-100/60', 'shadow-sm');
+        btn.classList.add('text-stone-600');
+      });
+
+      // 顯示目標頁面
+      const targetView = document.getElementById(`view-${tabName}`);
+      if (targetView) targetView.classList.remove('hidden');
+
+      const activeNav = document.getElementById(`nav-${tabName}`);
+      if (activeNav) {
+        activeNav.classList.add('text-terracotta-600', 'bg-terracotta-100/60', 'shadow-sm');
+        activeNav.classList.remove('text-stone-600');
+      }
+
+      if (tabName === 'member') {
+        fetchMembers();
+      }
+    }
+
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    /* ==========================================
+       1. 商品商城 & 購物車邏輯
+    ========================================== */
+    function renderProducts(items) {
+      const grid = document.getElementById('product-grid');
+      document.getElementById('product-count').innerText = items.length;
+
+      grid.innerHTML = items.map(p => `
+        <div class="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-cream-200 flex flex-col group">
+          <div class="relative overflow-hidden aspect-square">
+            <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://placehold.co/600x600/F7F3E9/D97757?text=織心手作'">
+            <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-stone-700 text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+              NT$ ${p.price}
+            </span>
+          </div>
+          <div class="p-5 flex flex-col flex-grow justify-between space-y-4">
+            <div>
+              <h3 class="font-serif text-lg font-bold text-stone-800 group-hover:text-terracotta-600 transition-colors">${p.name}</h3>
+              <p class="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">${p.description}</p>
+            </div>
+            <button onclick="addToCart('${p.id}')" class="w-full py-2.5 bg-cream-100 hover:bg-terracotta-500 text-stone-700 hover:text-white rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4"></i>加入購物車
+            </button>
+          </div>
+        </div>
+      `).join('');
+      
+      lucide.createIcons();
+    }
+
+    function filterProducts(cat) {
+      // 按鈕樣式切換
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-terracotta-500', 'text-white');
+        btn.classList.add('bg-cream-100', 'text-stone-600');
+      });
+      event.target.classList.remove('bg-cream-100', 'text-stone-600');
+      event.target.classList.add('bg-terracotta-500', 'text-white');
+
+      if (cat === 'all') {
+        renderProducts(PRODUCTS);
+      } else {
+        const filtered = PRODUCTS.filter(p => p.category === cat);
+        renderProducts(filtered);
+      }
+    }
+
+    function addToCart(productId) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      if (!product) return;
+
+      const existing = cart.find(item => item.id === productId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+
+      updateCartUI();
+      
+      // Toast 提示
+      Swal.fire({
+        toast: true,
+        position: 'bottom-end',
+        icon: 'success',
+        title: `已將「${product.name}」放入購物車`,
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#FDFBF7',
+        color: '#4A3E3D'
+      });
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cart-badge');
+      const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+      
+      if (totalQty > 0) {
+        badge.innerText = totalQty;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      // 渲染購物車內列表
+      const container = document.getElementById('cart-items-container');
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-stone-400 space-y-3">
+            <i data-lucide="shopping-bag" class="w-12 h-12 mx-auto stroke-1"></i>
+            <p class="text-sm">購物車目前是空的喔</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = cart.map(item => `
+          <div class="flex items-center gap-3 bg-cream-50 p-3 rounded-2xl border border-cream-200">
+            <img src="${item.image}" class="w-16 h-16 object-cover rounded-xl" onerror="this.src='https://placehold.co/100x100'">
+            <div class="flex-grow min-w-0">
+              <h4 class="text-sm font-bold text-stone-800 truncate">${item.name}</h4>
+              <p class="text-xs text-terracotta-600 font-semibold mt-0.5">NT$ ${item.price}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button onclick="changeQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-white border border-stone-200 text-stone-600 flex items-center justify-center text-xs font-bold">-</button>
+                <span class="text-xs font-semibold w-4 text-center">${item.qty}</span>
+                <button onclick="changeQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-white border border-stone-200 text-stone-600 flex items-center justify-center text-xs font-bold">+</button>
+              </div>
+            </div>
+            <button onclick="removeFromCart('${item.id}')" class="text-stone-400 hover:text-red-500 p-1">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      // 計算總價
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      document.getElementById('cart-subtotal').innerText = `NT$ ${subtotal}`;
+      document.getElementById('cart-total').innerText = `NT$ ${subtotal}`;
+      
+      lucide.createIcons();
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+          cart = cart.filter(i => i.id !== id);
+        }
+        updateCartUI();
+      }
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.id !== id);
+      updateCartUI();
+    }
+
+    function toggleCartDrawer() {
+      const drawer = document.getElementById('cart-drawer');
+      const overlay = document.getElementById('cart-drawer-overlay');
+      
+      const isHidden = drawer.classList.contains('translate-x-full');
+      if (isHidden) {
+        drawer.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        drawer.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    /* ==========================================
+       2. 會員 API 互動邏輯 (POST, GET, PUT)
+    ========================================== */
+
+    // [POST] 會員註冊 API
+    async function handleRegister(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('reg-name').value.trim();
+      const pwd = document.getElementById('reg-pwd').value.trim();
+
+      if (!name || !pwd) {
+        Swal.fire('提醒', '姓名與密碼為必填欄位！', 'warning');
+        return;
+      }
+
+      const payload = {
+        name: name,
+        pwd: pwd,
+        sex: document.getElementById('reg-sex').value,
+        dep: document.getElementById('reg-dep').value.trim(),
+        tel: document.getElementById('reg-tel').value.trim(),
+        mobile: document.getElementById('reg-mobile').value.trim(),
+        addr: document.getElementById('reg-addr').value.trim(),
+        m: 0
+      };
+
+      showLoading(true);
+
+      try {
+        const response = await axios.post(API_BASE_URL, payload);
+        showLoading(false);
+
+        if (response.status === 201 || response.data.message === "註冊成功") {
+          Swal.fire({
+            icon: 'success',
+            title: '註冊成功！',
+            text: `您的會員 ID 為：${response.data.id || '已建立'}`,
+            confirmButtonColor: '#D97757'
+          });
+          document.getElementById('register-form').reset();
+          switchTab('member');
+        } else {
+          Swal.fire('註冊回應', response.data.message || '回應異常', 'info');
+        }
+      } catch (error) {
+        showLoading(false);
+        console.warn('Register API Failed, using Mock fallback logic:', error.message);
+        
+        // Mock 備援註冊邏輯
+        const newId = mockMembersDb.length > 0 ? Math.max(...mockMembersDb.map(m => m.id)) + 1 : 1;
+        const newMember = { id: newId, ...payload };
+        mockMembersDb.push(newMember);
+
+        Swal.fire({
+          icon: 'success',
+          title: '註冊成功 (離線/模擬模式)',
+          text: `無法連線至本地 API，已建立模擬會員！您的 ID 為：${newId}`,
+          confirmButtonColor: '#D97757'
+        });
+        document.getElementById('register-form').reset();
+        switchTab('member');
+      }
+    }
+
+    // [GET] 查詢會員 API
+    async function fetchMembers(queryParams = {}) {
+      showLoading(true);
+
+      try {
+        const response = await axios.get(API_BASE_URL, { params: queryParams });
+        showLoading(false);
+        isMockMode = false;
+
+        memberList = Array.isArray(response.data) ? response.data : [];
+        renderMemberTable(memberList);
+      } catch (error) {
+        showLoading(false);
+        isMockMode = true;
+        console.warn('Fetch Members Failed (Network Error/CORS). Switching to local Mock mode.');
+
+        // 使用本地 Mock 數據過濾
+        let filtered = [...mockMembersDb];
+        if (queryParams.id) filtered = filtered.filter(m => String(m.id) === String(queryParams.id));
+        if (queryParams.name) filtered = filtered.filter(m => m.name.includes(queryParams.name));
+        if (queryParams.dep) filtered = filtered.filter(m => m.dep.includes(queryParams.dep));
+        if (queryParams.sex) filtered = filtered.filter(m => m.sex === queryParams.sex);
+
+        memberList = filtered;
+        renderMemberTable(memberList);
+      }
+    }
+
+    function handleSearch(e) {
+      e.preventDefault();
+      const params = {};
+      const id = document.getElementById('search-id').value.trim();
+      const name = document.getElementById('search-name').value.trim();
+      const dep = document.getElementById('search-dep').value.trim();
+      const sex = document.getElementById('search-sex').value;
+
+      if (id) params.id = id;
+      if (name) params.name = name;
+      if (dep) params.dep = dep;
+      if (sex) params.sex = sex;
+
+      fetchMembers(params);
+    }
+
+    function renderMemberTable(members) {
+      const tbody = document.getElementById('member-table-body');
+      
+      if (members.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="p-6 text-center text-stone-400">
+              查無會員資料
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = members.map(m => `
+        <tr class="hover:bg-cream-50/80 transition">
+          <td class="p-3 font-semibold text-stone-800">#${m.id}</td>
+          <td class="p-3 font-medium text-stone-800">${m.name || '-'}</td>
+          <td class="p-3">${m.sex === 'F' ? '女' : m.sex === 'M' ? '男' : m.sex || '-'}</td>
+          <td class="p-3"><span class="px-2 py-0.5 bg-cream-200 text-stone-700 rounded text-xs">${m.dep || '無'}</span></td>
+          <td class="p-3 text-xs">${m.mobile || m.tel || '-'}</td>
+          <td class="p-3 text-xs truncate max-w-xs">${m.addr || '-'}</td>
+          <td class="p-3 font-bold text-terracotta-600">${m.m ?? 0}</td>
+          <td class="p-3 text-center">
+            <button onclick="openUpdateModal(${JSON.stringify(m).replace(/"/g, '&quot;')})" class="px-3 py-1 bg-wood-600 hover:bg-wood-800 text-white rounded-lg text-xs transition">
+              編輯
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // [PUT] 更新會員 Modal 與邏輯
+    function openUpdateModal(member) {
+      document.getElementById('update-id').value = member.id;
+      document.getElementById('update-auth-pwd').value = '';
+      document.getElementById('update-mobile').value = member.mobile || '';
+      document.getElementById('update-addr').value = member.addr || '';
+      document.getElementById('update-m').value = member.m ?? 0;
+      document.getElementById('update-new-pwd').value = '';
+
+      document.getElementById('update-modal').classList.remove('hidden');
+    }
+
+    function closeUpdateModal() {
+      document.getElementById('update-modal').classList.add('hidden');
+    }
+
+    async function handleUpdateMember(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('update-id').value;
+      const pwd = document.getElementById('update-auth-pwd').value.trim();
+
+      if (!pwd) {
+        Swal.fire('警告', '必須輸入當前密碼進行驗證！', 'warning');
+        return;
+      }
+
+      const payload = {
+        id: id,
+        pwd: pwd,
+        mobile: document.getElementById('update-mobile').value.trim(),
+        addr: document.getElementById('update-addr').value.trim(),
+        m: parseInt(document.getElementById('update-m').value) || 0
+      };
+
+      const newPwd = document.getElementById('update-new-pwd').value.trim();
+      if (newPwd) {
+        payload.new_pwd = newPwd;
+      }
+
+      showLoading(true);
+
+      try {
+        const response = await axios.put(API_BASE_URL, payload);
+        showLoading(false);
+
+        if (response.status === 200 || response.data.message === "資料更新成功") {
+          Swal.fire('成功', '會員資料更新成功！', 'success');
+          closeUpdateModal();
+          fetchMembers();
+        }
+      } catch (error) {
+        showLoading(false);
+        console.warn('Update Member API Failed, checking Mock fallback:', error.message);
+
+        // 如果在 Mock 模式下，進行本地模擬更新驗證
+        const mockIdx = mockMembersDb.findIndex(m => String(m.id) === String(id));
+        if (mockIdx !== -1) {
+          const target = mockMembersDb[mockIdx];
+          if (target.pwd && target.pwd !== pwd) {
+            Swal.fire('驗證失敗', '密碼不正確，無法修改（測試預設密碼：123）', 'error');
+            return;
+          }
+
+          // 更新 Mock 資料
+          target.mobile = payload.mobile;
+          target.addr = payload.addr;
+          target.m = payload.m;
+          if (payload.new_pwd) target.pwd = payload.new_pwd;
+
+          Swal.fire('成功 (離線模式)', '會員資料已於模擬模式中更新！', 'success');
+          closeUpdateModal();
+          fetchMembers();
+        } else {
+          Swal.fire('更新失敗', error.response?.data?.message || '伺服器無法連線', 'error');
+        }
+      }
+    }
+
+    /* ==========================================
+       3. 結帳與會員扣款驗證流程
+    ========================================== */
+    function openCheckoutModal() {
+      if (cart.length === 0) {
+        Swal.fire('提示', '購物車內尚無商品！', 'info');
+        return;
+      }
+
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      document.getElementById('checkout-order-total').innerText = `NT$ ${total}`;
+
+      // 載入會員選單
+      const select = document.getElementById('checkout-user-select');
+      if (memberList.length === 0) {
+        select.innerHTML = `<option value="">-- 請先查詢或註冊會員 --</option>`;
+      } else {
+        select.innerHTML = memberList.map(m => `
+          <option value="${m.id}" data-m="${m.m ?? 0}" data-addr="${m.addr || ''}">
+            ID: ${m.id} - ${m.name} (餘額 m: ${m.m ?? 0})
+          </option>
+        `).join('');
+      }
+
+      onCheckoutUserChange();
+      toggleCartDrawer(); // 關閉購物車側欄
+      document.getElementById('checkout-modal').classList.remove('hidden');
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkout-modal').classList.add('hidden');
+    }
+
+    function onCheckoutUserChange() {
+      const select = document.getElementById('checkout-user-select');
+      const selectedOption = select.options[select.selectedIndex];
+
+      if (selectedOption && selectedOption.value) {
+        const m = selectedOption.getAttribute('data-m');
+        const addr = selectedOption.getAttribute('data-addr');
+        document.getElementById('checkout-user-m').innerText = m;
+        document.getElementById('checkout-addr').value = addr;
+      } else {
+        document.getElementById('checkout-user-m').innerText = '0';
+        document.getElementById('checkout-addr').value = '';
+      }
+    }
+
+    async function handleCheckout(e) {
+      e.preventDefault();
+
+      const select = document.getElementById('checkout-user-select');
+      const userId = select.value;
+      const pwd = document.getElementById('checkout-pwd').value.trim();
+      const newAddr = document.getElementById('checkout-addr').value.trim();
+
+      if (!userId) {
+        Swal.fire('警告', '請選擇訂購的會員！', 'warning');
+        return;
+      }
+
+      const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const currentM = parseInt(document.getElementById('checkout-user-m').innerText) || 0;
+
+      // 檢查金額點數是否足夠
+      if (currentM < totalAmount) {
+        Swal.fire('點數/餘額不足', `您目前的 m 點數為 ${currentM}，不足支付總額 NT$ ${totalAmount}`, 'error');
+        return;
+      }
+
+      // 扣除後的點數
+      const updatedM = currentM - totalAmount;
+
+      // 使用 PUT API 進行身份驗證並更新點數與地址
+      const payload = {
+        id: userId,
+        pwd: pwd,
+        addr: newAddr,
+        m: updatedM
+      };
+
+      showLoading(true);
+
+      try {
+        const response = await axios.put(API_BASE_URL, payload);
+        showLoading(false);
+
+        if (response.status === 200 || response.data.message === "資料更新成功") {
+          Swal.fire({
+            icon: 'success',
+            title: '結帳完成！',
+            html: `訂單已成功送出！<br>成功扣除點數：<b>${totalAmount}</b><br>剩餘點數：<b>${updatedM}</b>`,
+            confirmButtonColor: '#D97757'
+          });
+
+          cart = [];
+          updateCartUI();
+          closeCheckoutModal();
+          fetchMembers();
+        }
+      } catch (error) {
+        showLoading(false);
+        console.warn('Checkout API Failed, running Mock fallback checkout logic:', error.message);
+
+        // 本地 Mock 結帳驗證
+        const mockIdx = mockMembersDb.findIndex(m => String(m.id) === String(userId));
+        if (mockIdx !== -1) {
+          const target = mockMembersDb[mockIdx];
+          if (target.pwd && target.pwd !== pwd) {
+            Swal.fire('認證失敗', '會員密碼不正確，無法完成結帳！（測試預設密碼：123）', 'error');
+            return;
+          }
+
+          target.m = updatedM;
+          target.addr = newAddr;
+
+          Swal.fire({
+            icon: 'success',
+            title: '結帳完成 (離線模式)',
+            html: `訂單已成功送出！<br>成功扣除點數：<b>${totalAmount}</b><br>剩餘點數：<b>${updatedM}</b>`,
+            confirmButtonColor: '#D97757'
+          });
+
+          cart = [];
+          updateCartUI();
+          closeCheckoutModal();
+          fetchMembers();
+        } else {
+          Swal.fire('結帳失敗', '認證或交易處理時發生錯誤', 'error');
+        }
+      }
+    }
+  </script>
+</body>
+</html>
